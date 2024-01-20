@@ -1,0 +1,45 @@
+jobs:
+- pysparkJob:
+    mainPythonFileUri: gs://github_code_deployment/code/etl/ingest_raw_to_bronze_categories.py
+  stepId: raw_to_bronze_cat
+- pysparkJob:
+    mainPythonFileUri: gs://github_code_deployment/code/etl/ingest_raw_to_bronze_videos.py
+  stepId: raw_to_bronze_vid
+- prerequisiteStepIds:
+  - raw_to_bronze_cat
+  pysparkJob:
+    mainPythonFileUri: gs://github_code_deployment/code/etl/ingest_bronze_to_silver_categories.py
+  stepId: bronze_to_silver_cat
+- prerequisiteStepIds:
+  - raw_to_bronze_vid
+  pysparkJob:
+    mainPythonFileUri: gs://github_code_deployment/code/etl/ingest_bronze_to_silver_videos.py
+  stepId: bronze_to_silver_vid
+- prerequisiteStepIds:
+  - bronze_to_silver_cat
+  - bronze_to_silver_vid
+  pysparkJob:
+    mainPythonFileUri: gs://github_code_deployment/code/etl/tranform_to_youtube_videos.py
+  stepId: to_gold
+placement:
+  managedCluster:
+    clusterName: cluster-4b54
+    config:
+      gceClusterConfig:
+        networkUri: default
+      masterConfig:
+        diskConfig:
+          bootDiskSizeGb: 500
+          bootDiskType: pd-standard
+          localSsdInterface: SCSI
+        machineTypeUri: n1-standard-4
+        numInstances: 1
+      softwareConfig:
+        imageVersion: 2.1-debian11
+      workerConfig:
+        diskConfig:
+          bootDiskSizeGb: 500
+          bootDiskType: pd-standard
+          localSsdInterface: SCSI
+        machineTypeUri: n1-standard-2
+        numInstances: 2

@@ -17,5 +17,5 @@ jobs:
       uses: 'google-github-actions/setup-gcloud@v2'
     - name: Overwrite code files in GCS
       run: |
-        gsutil -m rm -rf gs://github_code_deployment/code/
+        gsutil -m rm -rf gs://github_code_deployment/code/ || true
         gsutil  -m cp -r code gs://github_code_deployment/

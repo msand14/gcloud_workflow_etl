@@ -1,0 +1,34 @@
+name: GCS Dataproc Workflows Deployment
+on:
+  push:
+    # Anytime there is a push to the main branch, the action will be triggered
+    branches: [ main ]
+jobs:
+  deploy:
+    name: Overwriting  Dataproc Workflow template
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.1.1
+    - name: Auth
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    - name: Using setup-gcloud
+      uses: 'google-github-actions/setup-gcloud@v2'
+        # To run the following Dataproc Admin role was given to SA
+    - name: Removing previous and only workflow template
+      run:
+        # Delete the existent workflow-template -> hardcoded "etl-youtube-videos-python", making it flexible would be awesome!
+        gcloud dataproc workflow-templates delete etl-youtube-videos-python --region=europe-west1 || true
+    - name: Creating empty workflow-template
+      run:
+        gcloud dataproc workflow-templates create youtube-videos-etl-pyspark --region=europe-west1 || true
+    - name: Modifying  worflow-template  from previous step with repo yaml content
+      run:
+        # Create empty workflow template
+        gcloud dataproc workflow-templates import  youtube-videos-etl-pyspark --region=europe-west1  --source=code/dataproc_workflow_templates/youtube-videos-etl-pyspark.yaml
+    # Uncomment in case its necessary to trigger the job   
+    #- name: Running Job from Workflow template from Repo 
+    #  run: 
+    #    gcloud dataproc workflow-templates instantiate-from-file --file code/dataproc_workflow_templates/youtube-videos-etl-pyspark.yaml --region=europe-west1
